@@ -1,0 +1,4 @@
+---
+
+# Settings used to test role
+mariadb_use_system_repository: False

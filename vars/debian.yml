@@ -1,0 +1,27 @@
+---
+
+# Debian OS family common variables
+
+_mariadb_apt_cache_valid_time: 3600
+_mariadb_apt_key_id:
+  trusty: '0xCBCB082A1BB943DB'
+  xenial: '0xF1656F24C74CD1D8'
+_mariadb_apt_key_server: 'hkp://keyserver.ubuntu.com:80'
+_mariadb_apt_repository_arch:
+  - 'amd64'
+_mariadb_apt_repository_url: "http://fr.mirror.babylon.network/mariadb/repo/{{ mariadb_version }}/ubuntu"
+_mariadb_apt_sources_list_mode: '0644'
+_mariadb_apt_sources_list_path: '/etc/apt/sources.list.d/mariadb.list'
+_mariadb_apt_update_cache: True
+
+_mariadb_prerequisites_packages:
+  - name: 'software-properties-common'
+    state: 'present'
+
+_mariadb_packages:
+  - name: 'mariadb-server'
+    state: 'latest'
+  - name: 'mariadb-client'
+    state: 'latest'
+  - name: 'python-mysqldb'
+    state: 'latest'

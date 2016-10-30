@@ -2,3 +2,22 @@
 
 # Defaults vars file for mariadb role
 
+# True: use system packages, else use mariadb.org repositories
+mariadb_use_system_repository: True
+
+# General repositories informations
+mariadb_packages: "{{ _mariadb_packages }}"
+mariadb_prerequisites_packages: "{{ _mariadb_prerequisites_packages }}"
+
+#  Debian family specific variables
+mariadb_apt_cache_valid_time: "{{ _mariadb_apt_cache_valid_time }}"
+mariadb_apt_key_id: "{{ _mariadb_apt_key_id[(ansible_distribution_release | lower)] }}"
+mariadb_apt_key_server: "{{ _mariadb_apt_key_server }}"
+mariadb_apt_repository_arch: "{{ _mariadb_apt_repository_arch }}"
+mariadb_apt_repository_url: "{{ _mariadb_apt_repository_url }}"
+mariadb_apt_sources_list_mode: "{{ _mariadb_apt_sources_list_mode }}"
+mariadb_apt_sources_list_path: "{{ _mariadb_apt_sources_list_path }}"
+mariadb_apt_update_cache: "{{ _mariadb_apt_update_cache }}"
+
+# If not use system repository, need more informations
+mariadb_version: '10.1'

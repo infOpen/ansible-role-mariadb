@@ -1,0 +1,52 @@
+---
+
+# Installation tasks for Debian family OS
+
+- name: 'Install prerequisites'
+  become: True
+  apt:
+    name: "{{ item.name }}"
+    state: "{{ item.state | default(present) }}"
+    cache_valid_time: "{{ mariadb_apt_cache_valid_time }}"
+    update_cache: "{{ mariadb_apt_update_cache }}"
+  with_items: "{{ mariadb_prerequisites_packages }}"
+
+
+- name: 'Add repository key'
+  become: True
+  apt_key:
+    id: "{{ mariadb_apt_key_id }}"
+    keyserver: "{{ mariadb_apt_key_server }}"
+    state: 'present'
+  when: "{{ not mariadb_use_system_repository }}"
+
+
+- name: 'Create source.list.d file'
+  become: True
+  template:
+    src: 'apt_repository.list.j2'
+    dest: "{{ mariadb_apt_sources_list_path }}"
+    mode: "{{ mariadb_apt_sources_list_mode }}"
+    owner: 'root'
+    group: 'root'
+  register: 'mariadb_source_list_changed'
+  when: "{{ not mariadb_use_system_repository }}"
+
+
+- name: 'Force apt cache update if repository file changed'
+  become: True
+  apt:
+    update_cache: True
+  when:
+    - "{{ not mariadb_use_system_repository }}"
+    - "{{ mariadb_source_list_changed | changed }}"
+
+
+- name: 'Install packages'
+  become: True
+  apt:
+    name: "{{ item.name }}"
+    state: "{{ item.state | default(present) }}"
+    cache_valid_time: "{{ mariadb_apt_cache_valid_time }}"
+    update_cache: "{{ mariadb_apt_update_cache }}"
+  with_items: "{{ mariadb_packages }}"

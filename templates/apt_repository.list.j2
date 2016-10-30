@@ -1,0 +1,3 @@
+# {{ ansible_managed }}
+
+deb [arch={{ mariadb_apt_repository_arch | join(',') }}] {{ mariadb_apt_repository_url }} {{ ansible_distribution_release | lower }} main

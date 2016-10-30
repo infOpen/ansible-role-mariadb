@@ -2,3 +2,15 @@
 
 # Main tasks file for mariadb role
 
+- name: 'Load the OS specific varibles'
+  include_vars: "{{ role_path }}/vars/{{ ansible_os_family | lower }}.yml"
+  tags:
+    - 'mariadb::role'
+    - 'mariadb::install'
+
+
+- name: 'Manage install tasks'
+  include: "install_{{ ansible_os_family | lower }}.yml"
+  tags:
+    - 'mariadb::role'
+    - 'mariadb::install'
