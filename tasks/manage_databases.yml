@@ -1,0 +1,37 @@
+---
+
+# Databases management tasks
+- name: 'Get all databases'
+  no_log: True
+  command: >
+    mysql -u root -p{{ mariadb_root_password }}
+    -NBe "SHOW DATABASES"
+  register: 'mariadb_databases_entries'
+  changed_when: False
+
+
+- name: 'Manage databases'
+  no_log: True
+  mysql_db:
+    login_host: '127.0.0.1'
+    login_user: 'root'
+    login_password: "{{ mariadb_root_password }}"
+    name: "{{ item.name }}"
+    collation: "{{ item.collation | default(omit) }}"
+    encoding: "{{ item.encoding | default(omit) }}"
+    state: "{{ item.state | default('present') }}"
+  with_items: "{{ mariadb_databases }}"
+
+
+- name: 'Remove all databases not managed'
+  no_log: True
+  mysql_db:
+    login_host: '127.0.0.1'
+    login_user: 'root'
+    login_password: "{{ mariadb_root_password }}"
+    name: "{{ item }}"
+    state: 'absent'
+  with_items: "{{ mariadb_databases_entries.stdout_lines }}"
+  when:
+    - "{{ mariadb_remove_unmanaged_databases }}"
+    - "{{ item not in ((mariadb_databases | map(attribute='name') | list) + mariadb_protected_databases) }}"
