@@ -13,9 +13,9 @@
   mysql_variables:
     login_host: '127.0.0.1'
     login_user: 'root'
-    login_password: "{{ mariadb_root_old_password }}"
+    login_password: "{{ mariadb_root_password }}"
     variable: 'max_connections'
-  register: 'mariadb_check_old_root_password'
+  register: 'mariadb_check_root_password'
   changed_when: False
   ignore_errors: True
   when: "{{ mariadb_root_password != mariadb_root_old_password }}"
@@ -35,7 +35,7 @@
     - "{{ mariadb_accounts }}"
     - 'hosts'
   when:
-    - "{{ mariadb_check_old_root_password.failed is not defined }}"
+    - "{{ mariadb_check_root_password.failed is defined }}"
     - "{{ item.0.name == 'root' }}"
 
 
