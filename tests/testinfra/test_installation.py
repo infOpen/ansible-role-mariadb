@@ -82,3 +82,14 @@ def test_credentials_file(File):
     assert credentials_file.contains('\[client\]')
     assert credentials_file.contains('user\s*=\s*root')
     assert credentials_file.contains('password\s*=\s*test123')
+
+
+def test_mariadb_databases(Command, File):
+
+    Command('mysql -u root -ptest123 -NBe "SHOW DATABASES" > /tmp/mariadb_databases.txt')
+    mariadb_databases = File('/tmp/mariadb_databases.txt')
+
+    assert mariadb_databases.contains('information_schema')
+    assert mariadb_databases.contains('mysql')
+    assert mariadb_databases.contains('performance_schema')
+    assert mariadb_databases.contains('foobar')

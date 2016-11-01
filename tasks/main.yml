@@ -31,6 +31,13 @@
     - 'mariadb::config'
 
 
+- name: 'Manage databases tasks'
+  include: 'manage_databases.yml'
+  tags:
+    - 'mariadb::role'
+    - 'mariadb::config'
+
+
 - name: 'Manage credentials tasks'
   include: 'manage_accounts.yml'
   tags:

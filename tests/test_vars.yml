@@ -35,3 +35,7 @@ mariadb_accounts:
     hosts:
       - 'localhost'
     password: 'foo'
+    priv: 'foobar.*:SELECT'
+
+mariadb_databases:
+  - name: 'foobar'

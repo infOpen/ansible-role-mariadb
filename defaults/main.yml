@@ -50,3 +50,11 @@ mariadb_accounts:
   - name: 'debian-sys-maint'
     hosts:
       - 'localhost'
+
+# Databases management
+mariadb_remove_unmanaged_databases: True
+mariadb_protected_databases:
+  - 'information_schema'
+  - 'mysql'
+  - 'performance_schema'
+mariadb_databases: []
