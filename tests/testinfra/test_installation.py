@@ -41,3 +41,44 @@ def test_apt_repository_file(SystemInfo, File):
     assert apt_file.group == 'root'
     assert apt_file.mode == 0o644
     assert expected_content in apt_file.content_string
+
+
+def test_main_configuration_file(File):
+
+    main_cfg_file = File('/etc/mysql/my.cnf')
+
+    assert main_cfg_file.contains('\[galera\]') is False
+    assert main_cfg_file.contains('innodb_open_files\s*=\s*500')
+    assert main_cfg_file.contains('quote-names\s*=\s*1')
+
+
+def test_service(Service):
+
+    service = Service('mysql')
+
+    assert service.is_enabled
+    assert service.is_running
+
+
+def test_mariadb_accounts(Command, File):
+
+    Command('mysql -u root -ptest123 -NBe "SELECT DISTINCT User FROM mysql.user" > /tmp/mariadb_users.txt')
+    mariadb_accounts = File('/tmp/mariadb_users.txt')
+
+    assert mariadb_accounts.contains('root')
+    assert mariadb_accounts.contains('debian-sys-maint')
+    assert mariadb_accounts.contains('ansible-test')
+
+
+def test_credentials_file(File):
+
+    credentials_file = File('/root/.my.cnf')
+
+    assert credentials_file.exists
+    assert credentials_file.is_file
+    assert credentials_file.user == 'root'
+    assert credentials_file.group == 'root'
+    assert credentials_file.mode == 0o400
+    assert credentials_file.contains('\[client\]')
+    assert credentials_file.contains('user\s*=\s*root')
+    assert credentials_file.contains('password\s*=\s*test123')

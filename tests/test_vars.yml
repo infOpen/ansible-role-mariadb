@@ -2,3 +2,36 @@
 
 # Settings used to test role
 mariadb_use_system_repository: False
+
+mariadb_config_main_file_items:
+  - section: 'galera'
+    state: 'absent'
+  - section: 'mysqld'
+    option: 'innodb_open_files'
+    value: 500
+  - section: 'mysqldump'
+    option: 'quote-names'
+    value: 1
+
+mariadb_root_old_password: ''
+mariadb_root_password: 'test123'
+
+mariadb_accounts:
+  - name: 'root'
+    password: "{{ mariadb_root_password }}"
+    hosts:
+      - '127.0.0.1'
+      - '::1'
+      - 'localhost'
+    files:
+      - dest: '/root/.my.cnf'
+        owner: 'root'
+        group: 'root'
+        mode: '0400'
+  - name: 'debian-sys-maint'
+    hosts:
+      - 'localhost'
+  - name: 'ansible-test'
+    hosts:
+      - 'localhost'
+    password: 'foo'

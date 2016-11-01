@@ -6,7 +6,7 @@ Install mariadb package.
 
 ## Requirements
 
-This role requires Ansible 2.0 or higher,
+This role requires Ansible 2.1 or higher,
 and platform requirements are listed in the metadata file.
 
 ## Testing

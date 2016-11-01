@@ -25,3 +25,7 @@ _mariadb_packages:
     state: 'latest'
   - name: 'python-mysqldb'
     state: 'latest'
+
+_mariadb_config_main_file_path: '/etc/mysql/my.cnf'
+
+_mariadb_service_name: 'mysql'

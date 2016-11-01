@@ -49,4 +49,6 @@
     state: "{{ item.state | default(present) }}"
     cache_valid_time: "{{ mariadb_apt_cache_valid_time }}"
     update_cache: "{{ mariadb_apt_update_cache }}"
+  environment:
+    DEBIAN_FRONTEND: 'noninteractive'
   with_items: "{{ mariadb_packages }}"
