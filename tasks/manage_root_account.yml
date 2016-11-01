@@ -1,0 +1,60 @@
+---
+
+# Manage root account
+
+- name: 'Check root password'
+  fail:
+    msg: 'You must set a root password to continue !'
+  when: "{{ mariadb_root_password == '' }}"
+
+
+- name: 'Check if root password need to be changed'
+  no_log: True
+  mysql_variables:
+    login_host: '127.0.0.1'
+    login_user: 'root'
+    login_password: "{{ mariadb_root_old_password }}"
+    variable: 'max_connections'
+  register: 'mariadb_check_old_root_password'
+  changed_when: False
+  ignore_errors: True
+  when: "{{ mariadb_root_password != mariadb_root_old_password }}"
+
+
+- name: 'Change root credentials'
+  no_log: True
+  mysql_user:
+    login_host: '127.0.0.1'
+    login_user: 'root'
+    login_password: "{{ mariadb_root_old_password }}"
+    host: "{{ item.1 }}"
+    name: 'root'
+    password: "{{ item.0.password }}"
+    check_implicit_admin: True
+  with_subelements:
+    - "{{ mariadb_accounts }}"
+    - 'hosts'
+  when:
+    - "{{ mariadb_check_old_root_password.failed is not defined }}"
+    - "{{ item.0.name == 'root' }}"
+
+
+- name: 'Get remote hosts of root user'
+  no_log: True
+  command: >
+    mysql -u root -p{{ mariadb_root_password }}
+    -NBe "SELECT Host FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1')"
+  register: 'mariadb_root_remote_hosts'
+  changed_when: False
+
+
+- name: 'Remove all root entries with remote host'
+  no_log: True
+  mysql_user:
+    login_host: '127.0.0.1'
+    login_user: 'root'
+    login_password: "{{ mariadb_root_password }}"
+    name: 'root'
+    host: "{{ item }}"
+    state: 'absent'
+  with_items: "{{ mariadb_root_remote_hosts.stdout_lines }}"

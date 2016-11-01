@@ -1,0 +1,120 @@
+---
+
+# Accounts management tasks
+
+- name: 'Manage accounts other than root'
+  no_log: True
+  mysql_user:
+    login_host: '127.0.0.1'
+    login_user: 'root'
+    login_password: "{{ mariadb_root_password }}"
+    name: "{{ item.0.name }}"
+    host: "{{ item.1 }}"
+    password: "{{ item.0.password | default(omit) }}"
+    encrypted: "{{ item.0.encrypted | default(False) }}"
+    priv: "{{ item.0.priv | default(omit) }}"
+    append_privs: "{{ item.0.append_privs | default(False) }}"
+    state: "{{ item.0.state | default('present') }}"
+  with_subelements:
+    - "{{ mariadb_accounts }}"
+    - 'hosts'
+    - skip_missing: True
+  when: "{{ item.0.name != 'root' }}"
+
+
+- name: 'Get all users in mysql.user table'
+  no_log: True
+  command: >
+    mysql -u root -p{{ mariadb_root_password }}
+    -NBe "SELECT DISTINCT User FROM mysql.user"
+  register: 'mariadb_mysql_user_entries'
+  changed_when: False
+
+
+- name: 'Remove all users not managed'
+  no_log: True
+  mysql_user:
+    login_host: '127.0.0.1'
+    login_user: 'root'
+    login_password: "{{ mariadb_root_password }}"
+    name: "{{ item }}"
+    host_all: True
+    state: 'absent'
+  with_items: "{{ mariadb_mysql_user_entries.stdout_lines }}"
+  when:
+    - "{{ mariadb_remove_unmanaged_accounts }}"
+    - "{{ item not in (mariadb_accounts | map(attribute='name') | list) }}"
+
+
+- name: 'Manage credential files - User (Before 2.2)'
+  become: True
+  no_log: True
+  ini_file:
+    dest: "{{ item.1.dest }}"
+    owner: "{{ item.1.owner }}"
+    group: "{{ item.1.group }}"
+    mode: "{{ item.1.mode }}"
+    section: 'client'
+    option: 'user'
+    value: "{{ item.0.name }}"
+  with_subelements:
+    - "{{ mariadb_accounts }}"
+    - 'files'
+    - skip_missing: True
+  when: "{{ ansible_version.full | version_compare('2.2', '<') }}"
+
+
+- name: 'Manage credential files - User (From 2.2)'
+  become: True
+  no_log: True
+  ini_file:
+    dest: "{{ item.1.dest }}"
+    owner: "{{ item.1.owner }}"
+    group: "{{ item.1.group }}"
+    mode: "{{ item.1.mode }}"
+    section: 'client'
+    option: 'user'
+    value: "{{ item.0.name }}"
+    create: True
+  with_subelements:
+    - "{{ mariadb_accounts }}"
+    - 'files'
+    - skip_missing: True
+  when: "{{ ansible_version.full | version_compare('2.2', '>=') }}"
+
+
+- name: 'Manage credential files - Password (Before 2.2)'
+  become: True
+  no_log: True
+  ini_file:
+    dest: "{{ item.1.dest }}"
+    owner: "{{ item.1.owner | default('root') }}"
+    group: "{{ item.1.group | default('root') }}"
+    mode: "{{ item.1.mode | default('0400') }}"
+    section: 'client'
+    option: 'password'
+    value: "{{ item.0.password }}"
+  with_subelements:
+    - "{{ mariadb_accounts }}"
+    - 'files'
+    - skip_missing: True
+  when: "{{ ansible_version.full | version_compare('2.2', '<') }}"
+
+
+- name: 'Manage credential files - Password (From 2.2)'
+  become: True
+  no_log: True
+  ini_file:
+    dest: "{{ item.1.dest }}"
+    owner: "{{ item.1.owner | default('root') }}"
+    group: "{{ item.1.group | default('root') }}"
+    mode: "{{ item.1.mode | default('0400') }}"
+    section: 'client'
+    option: 'password'
+    value: "{{ item.0.password }}"
+    create: True
+  with_subelements:
+    - "{{ mariadb_accounts }}"
+    - 'files'
+    - skip_missing: True
+  when: "{{ ansible_version.full | version_compare('2.2', '>=') }}"
