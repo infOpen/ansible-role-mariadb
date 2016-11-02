@@ -25,22 +25,26 @@ mariadb_version: '10.1'
 # Configuration management
 mariadb_config_main_file_path: "{{ _mariadb_config_main_file_path }}"
 mariadb_config_main_file_items: []
+mariadb_socket_path: '/var/run/mysqld/mysqld.sock'
 
 # Service management
 mariadb_service_enabled: True
 mariadb_service_name: "{{ _mariadb_service_name }}"
 mariadb_service_state: 'started'
 
-# Accounts management
+# Root account credentials
 mariadb_root_old_password: ''
 mariadb_root_password: ''
+
+# Root account connection management
+mariadb_root_use_socket: True
+
+# Accounts management
 mariadb_remove_unmanaged_accounts: True
 mariadb_accounts:
   - name: 'root'
     password: "{{ mariadb_root_password }}"
     hosts:
-      - '127.0.0.1'
-      - '::1'
       - 'localhost'
     files:
       - dest: '/root/.my.cnf'

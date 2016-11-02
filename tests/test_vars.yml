@@ -36,6 +36,7 @@ mariadb_accounts:
       - 'localhost'
     password: 'foo'
     priv: 'foobar.*:SELECT'
+    plugin: 'unix_socket'
 
 mariadb_databases:
   - name: 'foobar'

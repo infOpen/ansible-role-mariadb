@@ -3,9 +3,11 @@
 # Accounts management tasks
 
 - name: 'Manage accounts other than root'
+  become: True
   no_log: True
   mysql_user:
-    login_host: '127.0.0.1'
+    login_host: "{{ mariadb_root_use_socket | ternary(omit, '127.0.0.1') }}"
+    login_unix_socket: "{{ mariadb_root_use_socket | ternary(mariadb_socket_path, omit) }}"
     login_user: 'root'
     login_password: "{{ mariadb_root_password }}"
     name: "{{ item.0.name }}"
@@ -22,7 +24,30 @@
   when: "{{ item.0.name != 'root' }}"
 
 
+- name: 'Manage plugins for accounts other than root'
+  become: True
+  no_log: True
+  command: >
+    mysql -u root -p{{ mariadb_root_password }}
+    -NBe "UPDATE mysql.user SET Plugin='{{ item.plugin }}' WHERE User='{{ item.name }}';SELECT ROW_COUNT();"
+  register: 'mariadb_manage_accounts_plugin'
+  changed_when: False
+  with_items: "{{ mariadb_accounts }}"
+  when:
+    - "{{ item.name != 'root' }}"
+    - "{{ item.plugin is defined }}"
+
+
+- name: 'Check if plugin changed for some user'
+  no_log: True
+  command: "echo ''"
+  changed_when: "{{ (item.stdout | int) > 0 }}"
+  with_items: "{{ mariadb_manage_accounts_plugin.results }}"
+  when: "{{ item.stdout is defined }}"
+
+
 - name: 'Get all users in mysql.user table'
+  become: True
   no_log: True
   command: >
     mysql -u root -p{{ mariadb_root_password }}
@@ -32,9 +57,11 @@
 
 
 - name: 'Remove all users not managed'
+  become: True
   no_log: True
   mysql_user:
-    login_host: '127.0.0.1'
+    login_host: "{{ mariadb_root_use_socket | ternary(omit, '127.0.0.1') }}"
+    login_unix_socket: "{{ mariadb_root_use_socket | ternary(mariadb_socket_path, omit) }}"
     login_user: 'root'
     login_password: "{{ mariadb_root_password }}"
     name: "{{ item }}"
