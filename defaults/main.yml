@@ -24,7 +24,10 @@ mariadb_version: '10.1'
 
 # Configuration management
 mariadb_config_main_file_path: "{{ _mariadb_config_main_file_path }}"
-mariadb_config_main_file_items: []
+mariadb_config_main_file_items:
+  - section: 'mysqld'
+    option: 'plugin-load-add'
+    value: 'unix_socket=auth_socket.so'
 mariadb_socket_path: '/var/run/mysqld/mysqld.sock'
 
 # Service management

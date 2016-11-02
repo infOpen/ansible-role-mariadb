@@ -4,6 +4,9 @@
 mariadb_use_system_repository: False
 
 mariadb_config_main_file_items:
+  - section: 'mysqld'
+    option: 'plugin-load-add'
+    value: 'unix_socket=auth_socket.so'
   - section: 'galera'
     state: 'absent'
   - section: 'mysqld'
