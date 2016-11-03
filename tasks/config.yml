@@ -2,16 +2,18 @@
 
 # MariaDB configuration tasks
 
-- name: 'Manage main configuration file'
+- name: 'Manage configuration files'
   become: True
   ini_file:
-    dest: "{{ mariadb_config_main_file_path }}"
-    section: "{{ item.section | default('mysqld') }}"
-    option: "{{ item.option | default(omit) }}"
-    value: "{{ item.value | default(omit) }}"
-    state: "{{ item.state | default('present') }}"
+    dest: "{{ item.0.path }}"
+    section: "{{ item.1.section | default('mysqld') }}"
+    option: "{{ item.1.option | default(omit) }}"
+    value: "{{ item.1.value | default(omit) }}"
+    state: "{{ item.1.state | default('present') }}"
   notify: 'Restart MariaDB'
-  with_items: "{{ mariadb_config_main_file_items }}"
+  with_subelements:
+    - "{{ mariadb_config_files }}"
+    - 'items'
 
 
 - name: 'Manage service'
