@@ -9,22 +9,26 @@
 
 
 - name: 'Check if root password need to be changed'
+  become: True
   no_log: True
   mysql_variables:
-    login_host: '127.0.0.1'
+    login_host: "{{ mariadb_root_use_socket | ternary(omit, '127.0.0.1') }}"
+    login_unix_socket: "{{ mariadb_root_use_socket | ternary(mariadb_socket_path, omit) }}"
     login_user: 'root'
-    login_password: "{{ mariadb_root_old_password }}"
+    login_password: "{{ mariadb_root_password }}"
     variable: 'max_connections'
-  register: 'mariadb_check_old_root_password'
+  register: 'mariadb_check_root_password'
   changed_when: False
   ignore_errors: True
   when: "{{ mariadb_root_password != mariadb_root_old_password }}"
 
 
 - name: 'Change root credentials'
+  become: True
   no_log: True
   mysql_user:
-    login_host: '127.0.0.1'
+    login_host: "{{ mariadb_root_use_socket | ternary(omit, '127.0.0.1') }}"
+    login_unix_socket: "{{ mariadb_root_use_socket | ternary(mariadb_socket_path, omit) }}"
     login_user: 'root'
     login_password: "{{ mariadb_root_old_password }}"
     host: "{{ item.1 }}"
@@ -35,11 +39,22 @@
     - "{{ mariadb_accounts }}"
     - 'hosts'
   when:
-    - "{{ mariadb_check_old_root_password.failed is not defined }}"
+    - "{{ mariadb_check_root_password.failed is defined }}"
     - "{{ item.0.name == 'root' }}"
 
 
+- name: 'Manage unix_socket plugin usage for root user'
+  become: True
+  no_log: True
+  command: >
+    mysql -u root -p{{ mariadb_root_password }}
+    -NBe "UPDATE mysql.user SET Plugin='{{ mariadb_root_use_socket | ternary('unix_socket', '') }}' WHERE User='root';SELECT ROW_COUNT();"
+  register: 'mariadb_manage_root_unix_socket'
+  changed_when: "{{ (mariadb_manage_root_unix_socket.stdout | int) > 0 }}"
+
+
 - name: 'Get remote hosts of root user'
+  become: True
   no_log: True
   command: >
     mysql -u root -p{{ mariadb_root_password }}
@@ -49,9 +64,11 @@
 
 
 - name: 'Remove all root entries with remote host'
+  become: True
   no_log: True
   mysql_user:
-    login_host: '127.0.0.1'
+    login_host: "{{ mariadb_root_use_socket | ternary(omit, '127.0.0.1') }}"
+    login_unix_socket: "{{ mariadb_root_use_socket | ternary(mariadb_socket_path, omit) }}"
     login_user: 'root'
     login_password: "{{ mariadb_root_password }}"
     name: 'root'
