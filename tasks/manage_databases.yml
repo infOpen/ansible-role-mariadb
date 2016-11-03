@@ -2,6 +2,7 @@
 
 # Databases management tasks
 - name: 'Get all databases'
+  become: True
   no_log: True
   command: >
     mysql -u root -p{{ mariadb_root_password }}
@@ -11,9 +12,11 @@
 
 
 - name: 'Manage databases'
+  become: True
   no_log: True
   mysql_db:
-    login_host: '127.0.0.1'
+    login_host: "{{ mariadb_root_use_socket | ternary(omit, '127.0.0.1') }}"
+    login_unix_socket: "{{ mariadb_root_use_socket | ternary(mariadb_socket_path, omit) }}"
     login_user: 'root'
     login_password: "{{ mariadb_root_password }}"
     name: "{{ item.name }}"
@@ -24,9 +27,11 @@
 
 
 - name: 'Remove all databases not managed'
+  become: True
   no_log: True
   mysql_db:
-    login_host: '127.0.0.1'
+    login_host: "{{ mariadb_root_use_socket | ternary(omit, '127.0.0.1') }}"
+    login_unix_socket: "{{ mariadb_root_use_socket | ternary(mariadb_socket_path, omit) }}"
     login_user: 'root'
     login_password: "{{ mariadb_root_password }}"
     name: "{{ item }}"

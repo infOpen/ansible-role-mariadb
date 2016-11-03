@@ -3,15 +3,20 @@
 # Settings used to test role
 mariadb_use_system_repository: False
 
-mariadb_config_main_file_items:
-  - section: 'galera'
-    state: 'absent'
-  - section: 'mysqld'
-    option: 'innodb_open_files'
-    value: 500
-  - section: 'mysqldump'
-    option: 'quote-names'
-    value: 1
+mariadb_config_files:
+  - path: "{{ _mariadb_config_main_file_path }}"
+    items:
+      - section: 'mysqld'
+        option: 'plugin-load-add'
+        value: 'unix_socket=auth_socket.so'
+      - section: 'galera'
+        state: 'absent'
+      - section: 'mysqld'
+        option: 'innodb_open_files'
+        value: 500
+      - section: 'mysqldump'
+        option: 'quote-names'
+        value: 1
 
 mariadb_root_old_password: ''
 mariadb_root_password: 'test123'
@@ -36,6 +41,7 @@ mariadb_accounts:
       - 'localhost'
     password: 'foo'
     priv: 'foobar.*:SELECT'
+    plugin: 'unix_socket'
 
 mariadb_databases:
   - name: 'foobar'
